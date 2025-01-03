@@ -7,10 +7,11 @@ import sentry_sdk
 from contextlib import asynccontextmanager
 from datetime import datetime
 from app.core.config import settings
-from app.core.database import get_db, close_mongo_connection
+from app.core.database import get_db
 from app.api.v1.api import api_router
 from app.services.store_integrations import StoreIntegrationManager
 from app.services.scraper_service import ScraperService
+from app.migrations.registry import run_migrations
 
 # Initialize Sentry for error tracking
 if settings.SENTRY_DSN:
@@ -25,6 +26,12 @@ async def lifespan(app: FastAPI):
     # Startup
     app.mongodb_client = AsyncIOMotorClient(settings.MONGODB_URL)
     app.mongodb = app.mongodb_client[settings.DATABASE_NAME]
+    
+    # Run database migrations
+    print("Running database migrations...")
+    await run_migrations(app.mongodb)
+    print("Migrations completed")
+    
     app.redis = redis.from_url(settings.REDIS_URL, encoding="utf-8", decode_responses=True)
 
     # Initialize services
