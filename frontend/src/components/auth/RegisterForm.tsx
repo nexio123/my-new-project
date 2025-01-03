@@ -2,12 +2,9 @@ import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/hooks/useAuth';
+import { registerSchema, type RegisterFormValues } from '@/lib/validations/auth';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { registerSchema, type RegisterFormData } from '@/lib/validations/auth';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { FormMessage } from '@/components/ui/form';
 
 export function RegisterForm() {
   const router = useRouter();
@@ -17,29 +14,19 @@ export function RegisterForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-      fullName: '',
-    },
+    formState: { errors }
+  } = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema)
   });
 
-  async function onSubmit(data: RegisterFormData) {
+  async function onSubmit(data: RegisterFormValues) {
     setIsLoading(true);
-
     try {
       await registerUser(data.email, data.password, data.fullName);
       toast.success('Registration successful! Please log in.');
       router.push('/login');
     } catch (error) {
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error('Registration failed. Please try again.');
-      }
+      toast.error('Registration failed. Please try again.');
       console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
@@ -48,75 +35,72 @@ export function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="space-y-2">
-        <label
-          htmlFor="fullName"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-        >
+      <div>
+        <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
           Full Name
         </label>
-        <Input
-          id="fullName"
-          type="text"
-          placeholder="Enter your full name"
-          disabled={isLoading}
+        <input
           {...register('fullName')}
-          aria-invalid={!!errors.fullName}
+          type="text"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
         />
         {errors.fullName && (
-          <FormMessage>{errors.fullName.message}</FormMessage>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.fullName.message}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <label
-          htmlFor="email"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-        >
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
           Email address
         </label>
-        <Input
-          id="email"
-          type="email"
-          placeholder="Enter your email"
-          autoComplete="email"
-          disabled={isLoading}
+        <input
           {...register('email')}
-          aria-invalid={!!errors.email}
+          type="email"
+          autoComplete="email"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
         />
         {errors.email && (
-          <FormMessage>{errors.email.message}</FormMessage>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.email.message}</p>
         )}
       </div>
 
-      <div className="space-y-2">
-        <label
-          htmlFor="password"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-200"
-        >
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
           Password
         </label>
-        <Input
-          id="password"
-          type="password"
-          placeholder="Create a password"
-          autoComplete="new-password"
-          disabled={isLoading}
+        <input
           {...register('password')}
-          aria-invalid={!!errors.password}
+          type="password"
+          autoComplete="new-password"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
         />
         {errors.password && (
-          <FormMessage>{errors.password.message}</FormMessage>
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.password.message}</p>
         )}
       </div>
 
-      <Button
+      <div>
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+          Confirm Password
+        </label>
+        <input
+          {...register('confirmPassword')}
+          type="password"
+          autoComplete="new-password"
+          className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+        />
+        {errors.confirmPassword && (
+          <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.confirmPassword.message}</p>
+        )}
+      </div>
+
+      <button
         type="submit"
-        className="w-full"
         disabled={isLoading}
+        className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {isLoading ? 'Creating account...' : 'Create account'}
-      </Button>
+      </button>
     </form>
   );
 }
