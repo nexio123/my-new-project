@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, validator
+from pydantic import BaseModel, EmailStr, Field, field_validator
 from typing import Optional
 import re
 
@@ -12,40 +12,34 @@ class TokenPayload(BaseModel):
 
 class UserAuth(BaseModel):
     email: EmailStr = Field(..., description="User's email address")
-    password: str = Field(
-        ...,
-        min_length=8,
-        max_length=100,
-        description="Password must be between 8 and 100 characters"
-    )
+    password: str = Field(..., min_length=8, description="User's password")
 
-    @validator('password')
-    def password_complexity(cls, v):
+    @field_validator('password')
+    def validate_password(cls, v):
         if not re.search(r'[A-Z]', v):
             raise ValueError('Password must contain at least one uppercase letter')
         if not re.search(r'[a-z]', v):
             raise ValueError('Password must contain at least one lowercase letter')
         if not re.search(r'\d', v):
-            raise ValueError('Password must contain at least one digit')
+            raise ValueError('Password must contain at least one number')
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
             raise ValueError('Password must contain at least one special character')
         return v
 
 class UserCreate(UserAuth):
     full_name: str = Field(
-        ...,
-        min_length=2,
+        ..., 
+        min_length=2, 
         max_length=100,
-        description="User's full name must be between 2 and 100 characters"
+        pattern=r'^[a-zA-Z\s-]+$',
+        description="User's full name"
     )
 
-    @validator('full_name')
+    @field_validator('full_name')
     def validate_full_name(cls, v):
-        if not v.strip():
-            raise ValueError('Full name cannot be empty or just whitespace')
-        if not all(part.isalpha() or part.isspace() for part in v):
-            raise ValueError('Full name can only contain letters and spaces')
-        return v.strip()
+        if len(v.strip().split()) < 2:
+            raise ValueError('Full name must include both first and last name')
+        return v
 
 class UserResponse(BaseModel):
     id: str
